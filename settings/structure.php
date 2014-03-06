@@ -58,7 +58,8 @@ $Construct->PrimaryKey('EventID')
 
 //Insert old shoutbox data as good as we can with the remaining information
 if($Drop && count($old_data) > 0) {
-	new ShoutModel()->AddShouts($old_data);
+	$sm = new ShoutModel();
+	$sm->AddShouts($old_data);
 }
 
 // Example: Add column to existing table.
