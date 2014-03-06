@@ -11,15 +11,54 @@ $Database = Gdn::Database();
 $SQL = $Database->SQL(); // To run queries.
 $Construct = $Database->Structure(); // To modify and add database tables.
 $Validation = new Gdn_Validation(); // To validate permissions (if necessary).
+$PluginManager = Gdn::PluginManager();
 
 $Construct->Table('Shoutbox');
-if(!$Construct->TableExists()) {
-	$Construct->PrimaryKey('EventID')
-		->Column('UserID', 'int', FALSE)
-		->Column('ReplyTo', 'int', TRUE)
-		->Column('Timestamp', 'int(11)')
-		->Column('Content', 'text')
-		->Set($Drop, $Explicit);
+$old_data = array();
+
+//Remove old tables and insert the existing data into the new one
+if($Construct->TableExists()) {
+	//Check for Van2Shout
+	if(array_key_exists('Van2Shout', $PluginManager->EnabledPlugins())
+	 && $SQL->Query('SHOW COLUMNS FROM GDN_Shoutbox LIKE "UserName"')->NumRows() > 0) {
+		$tmp = $SQL->Select("*")->From("Shoutbox")->Get()->ResultArray();
+		$um = new UserModel();
+		foreach($tmp as $msg) {
+			//Parse old usernames to actual userids
+			$old_user = $um->GetByUsername($msg["UserName"]);
+			$userid = isset($old_user)? $old_user->UserID: null;
+
+			if($msg["PM"] != '') {
+				$old_user = $um->GetByUsername($msg["PM"]);
+				$messageto = isset($old_user)? $old_user->UserID: null;
+			}
+			else $messageto = null;
+
+			$old_data[] = array(
+				"UserID" => $userid,
+				"MessageTo" => $messageto,
+				"Timestamp" => $msg["Timestamp"],
+				"Content" => $msg["Content"]
+			);
+		}
+		$PluginManager->DisablePlugin('Van2Shout');
+		$Drop = true;
+		$Explicit = true;
+	}
+}
+
+//Create basis table for the shoutbox application
+$Construct->PrimaryKey('EventID')
+	->Column('UserID', 'int', FALSE)
+	->Column('MessageTo', 'int', TRUE)
+	->Column('Timestamp', 'int(11)')
+	->Column('Content', 'text')
+	->Set($Drop, $Explicit);
+
+
+//Insert old shoutbox data as good as we can with the remaining information
+if($Drop && count($old_data) > 0) {
+	new ShoutModel()->AddShouts($old_data);
 }
 
 // Example: Add column to existing table.

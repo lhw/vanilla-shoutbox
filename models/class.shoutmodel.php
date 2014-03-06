@@ -8,8 +8,27 @@ class ShoutModel extends Gdn_Model {
 			->Select('*')
 			->From('Shoutbox')
 			->BeginWhereGroup()
-				->OrWhere('ReplyTo', '')
-				->OrWhere('ReplyTo', $Session->UserID)
+				->OrWhere('MessageTo', '')
+				->OrWhere('MessageTo', $Session->UserID)
+			->EndWhereGroup()
+			->OrderBy('EventID', 'desc')
+			->Limit($Limit)
+			->Get()
+			->ResultArray();
+		return $shouts;
+	}
+
+	public function GetRecentByLastEventID($EventID, $Limit = 50) {
+		if(!is_numeric($EventID)) return false;
+		$Session = GDN::Session();
+
+		$shouts = $this->SQL
+			->Select('*')
+			->From('Shoutbox')
+			->Where('EventID >',$EventID)
+			->BeginWhereGroup()
+				->OrWhere('MessageTo', '')
+				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->OrderBy('EventID', 'desc')
 			->Limit($Limit)
@@ -19,15 +38,17 @@ class ShoutModel extends Gdn_Model {
 	}
 
 	public function GetShout($EventID) {
+		if(!is_numeric($EventID)) return false;
 		$Session = GDN::Session();
 
 		$shout = $this->SQL
 			->Select('*')
 			->From('Shoutbox')
+			->Where('EventID', $EventID)
+			->AndOp()
 			->BeginWhereGroup()
-				->OrWhere('ReplyTo', '')
-				->OrWhere('ReplyTo', $Session->UserID)
-				->AndWhere('EventID', $EventID)
+				->OrWhere('MessageTo', '')
+				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->Get()
 			->FirstRow();
@@ -35,46 +56,56 @@ class ShoutModel extends Gdn_Model {
 	}
 
 	public function IsLatest($EventID) {
+		if(!is_numeric($EventID)) return false;
 		$Session = GDN::Session();
 
 		$lastShout = $this->SQL
 			->Select('EventID')
 			->From('Shoutbox')
 			->BeginWhereGroup()
-				->OrWhere('ReplyTo', '')
-				->OrWhere('ReplyTo', $Session->UserID)
+				->OrWhere('MessageTo', '')
+				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->OrderBy('EventID', 'desc')
 			->Limit(1)
 			->Get()
 			->FirstRow();
 
-		return $lastShout->EventID == $EventID;
+		return $lastShout['EventID'] == $EventID;
 	}
 
-	public function AddShout($Content, $ReplyTo = -1) {
+	public function AddShout($Content, $MessageTo = 0) {
 		$Session = GDN::Session();
 
-		$values = array(
+		$this->SQL->Insert('Shoutbox', array(
 			'UserID' => $Session->UserID,
+			'MessageTo' => $MessageTo,
 			'Content' => $Content,
 			'Timestamp' => time()
-		);
-		if($ReplyTo != -1) $values['ReplyTo'] = $ReplyTo;
+		));
+		return true;
+	}
 
+	public function AddShouts($values) {
 		$this->SQL->Insert('Shoutbox', $values);
+		return true;
 	}
 
 	public function DeleteShout($EventID) {
+		if (!is_numeric($EventID)) return false;
 		$this->SQL->Delete('Shoutbox', array('EventID' => $EventID));
+		return true;
 	}
 
 	public function EditShout($EventID, $Content) {
+		if (!is_numeric($EventID)) return false;
+
 		$this->SQL
 			->Update('Shoutbox')
 			->Set('Content', $Content)
 			->Where('EventID', $EventID)
 			->Put();
+		return true;
 	}
 
 	public function PrepareText($text) {

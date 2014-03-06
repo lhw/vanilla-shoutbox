@@ -4,9 +4,6 @@
 
 
 
-// ^^ That's for users of your application, not you (the developer).
-// This file is where to place any default config settings for your application.
-
 // Usually you'll want to name your config settings in 3 parts: app short name, section of the app, and setting name:
 //$Configuration['Skeleton']['Section']['Setting'] = 'Value'; //TODO: basis configuration stuff here
 
