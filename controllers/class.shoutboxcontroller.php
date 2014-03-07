@@ -40,7 +40,7 @@ class ShoutboxController extends Gdn_Controller {
 		@ini_set('implicit_flush',1);
 
 		//Stop all levels of output buffering
-		for($i = 0; $i < ob_get_level(); $i++){
+		for($i = 0; $i < ob_get_level(); ++$i){
 			ob_end_flush();
 		}
 		ob_implicit_flush(1);
@@ -75,6 +75,7 @@ class ShoutboxController extends Gdn_Controller {
 					if ($msg["MessageTo"] != 0)
 						$msg["MessageToName"] = $this->UserModel->GetID($msg["MessageTo"])->Name;
 					printf("data: %s\n\n", json_encode($msg));
+					$LastEventID = $msg["EventID"];
 				}
 			}
 

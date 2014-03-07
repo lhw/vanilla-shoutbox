@@ -15,7 +15,7 @@ class ShoutModel extends Gdn_Model {
 			->Limit($Limit)
 			->Get()
 			->ResultArray();
-		return $shouts;
+		return array_reverse($shouts);
 	}
 
 	public function GetRecentByLastEventID($EventID, $Limit = 50) {
@@ -36,7 +36,7 @@ class ShoutModel extends Gdn_Model {
 			->Get()
 			->ResultArray();
 
-		return $shouts;
+		return array_reverse($shouts);
 	}
 
 	public function GetShout($EventID) {
