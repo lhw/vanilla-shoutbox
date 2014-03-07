@@ -8,7 +8,7 @@ class ShoutModel extends Gdn_Model {
 			->Select('*')
 			->From('Shoutbox')
 			->BeginWhereGroup()
-				->OrWhere('MessageTo', '')
+				->Where('MessageTo', 0)
 				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->OrderBy('EventID', 'desc')
@@ -25,15 +25,17 @@ class ShoutModel extends Gdn_Model {
 		$shouts = $this->SQL
 			->Select('*')
 			->From('Shoutbox')
-			->Where('EventID >',$EventID)
+			->Where('EventID >', $EventID)
+			->AndOp()
 			->BeginWhereGroup()
-				->OrWhere('MessageTo', '')
+				->Where('MessageTo', 0)
 				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->OrderBy('EventID', 'desc')
 			->Limit($Limit)
 			->Get()
 			->ResultArray();
+
 		return $shouts;
 	}
 
@@ -47,7 +49,7 @@ class ShoutModel extends Gdn_Model {
 			->Where('EventID', $EventID)
 			->AndOp()
 			->BeginWhereGroup()
-				->OrWhere('MessageTo', '')
+				->Where('MessageTo', 0)
 				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->Get()
@@ -63,7 +65,7 @@ class ShoutModel extends Gdn_Model {
 			->Select('EventID')
 			->From('Shoutbox')
 			->BeginWhereGroup()
-				->OrWhere('MessageTo', '')
+				->Where('MessageTo', 0)
 				->OrWhere('MessageTo', $Session->UserID)
 			->EndWhereGroup()
 			->OrderBy('EventID', 'desc')
@@ -71,7 +73,7 @@ class ShoutModel extends Gdn_Model {
 			->Get()
 			->FirstRow();
 
-		return $lastShout['EventID'] == $EventID;
+		return $lastShout->EventID <= $EventID;
 	}
 
 	public function AddShout($Content, $MessageTo = 0) {
@@ -119,5 +121,16 @@ class ShoutModel extends Gdn_Model {
 		$text = preg_replace($urlregex, $urlreplacement, $text);
 
 		return $text;
+	}
+
+	public function GetColor($String) {
+		$ColorArray = C("Shoutbox.Client.Colors");
+		if (count($ColorArray) < 1) return "#000000";
+
+		$sum = 0;
+		foreach(preg_split('//', $String, -1, PREG_SPLIT_NO_EMPTY) as $chr) {
+			$sum += ord($chr);
+		}
+		return $ColorArray[$sum % count($ColorArray)];
 	}
 }

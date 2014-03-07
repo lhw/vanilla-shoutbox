@@ -8,26 +8,16 @@
  */
 class ShoutboxController extends Gdn_Controller {
 
-	public $Uses = array('UserModel', 'RoleModel', 'Database');
+	public $Uses = array('ShoutModel', 'UserModel');
 
-   /**
-    * @since 0.1
-    * @access public
-    */
-   public function Initialize() {
-/*
-  		$this->DeliveryMethod(DELIVERY_METHOD_JSON);
-		$this->DeliveryType(DELIVERY_TYPE_DATA);
-		header('Content-Type: application/json; charset=utf-8');
-*/
-      parent::Initialize();
-   }
-
-	public function Get($LastEventId = 0) {
+	public function Get($LastEventID = 0) {
 		$Session = GDN::Session();
 
-		if(!$Session->CheckPermission('Shoutbox.View'))
-			return;
+		//Error handling as per sse standard. no further requests from the client
+		//if(!$Session->CheckPermission('Shoutbox.View')) {
+		//	header("HTTP/1.1 404 Not Found");
+		//	return;
+		//}
 
 		@set_time_limit(0);
 		header('Content-Type: text/event-stream');
@@ -56,23 +46,38 @@ class ShoutboxController extends Gdn_Controller {
 		ob_implicit_flush(1);
 
 		//Loop parameters
-		$SLEEP_TIME = C('Shoutbox.SSE.SleepTime', 3); //microseconds
+		$SLEEP_TIME = C('Shoutbox.SSE.SleepTime', 3); //seconds
 		$EXEC_LIMIT = C('Shoutbox.SSE.ExecLimit', 60); //seconds
 		$RECONNECT = C('Shoutbox.SSE.ClientReconnect', 5) * 1000; //miliseconds
 		$KEEP_ALIVE_TIME = C('Shoutbox.SSE.KeepAliveTime', 30); //seconds
 
+		//Got a an event id from the browser.
+		$init = true;
+		if(isset($_SERVER["HTTP_LAST_EVENT_ID"]) && $_SERVER["HTTP_LAST_EVENT_ID"] > $LastEventID) {
+			$LastEventID = $_SERVER["HTTP_LAST_EVENT_ID"];
+			$init = false;
+		}
+
 		$start = time();
 		printf("retry: %s\n", $RECONNECT);
-		$i = $LastEventId;
 
 		while(true) {
 			//No updates needed, send a comment to keep the connection alive.
 			if(!((time() - $start) % $KEEP_ALIVE_TIME))
 				printf(": %s\n\n", sha1(mt_rand()));
 
-			//TODO: output data here if there is new
-			printf("id: %d\n", ++$i);
-			printf("data: %d\n\n", time());
+			if(!$this->ShoutModel->IsLatest($LastEventID)) {
+				foreach($this->ShoutModel->GetRecentByLastEventID($LastEventID) as $msg) {
+					printf("id: %d\n", $msg["EventID"]);
+					printf("event: %s\n", $init? "init": "update");
+					$msg["UserName"] = $this->UserModel->GetID($msg["UserID"])->Name;
+					$msg["NameColor"] = $this->ShoutModel->GetColor($msg["UserName"]);
+					if ($msg["MessageTo"] != 0)
+						$msg["MessageToName"] = $this->UserModel->GetID($msg["MessageTo"])->Name;
+					printf("data: %s\n\n", json_encode($msg));
+				}
+			}
+
 			@ob_flush();
 			@flush();
 				
