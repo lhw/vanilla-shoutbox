@@ -114,7 +114,7 @@ class ShoutModel extends Gdn_Model {
 		$searchstring = array("\\\\", "\\n", "\\r", "\\Z", "\\'", '\\"');
 		$replacestring = array("\\", "\n", "\r", "\x1a", "'", '"');
 		$urlregex = '/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/i';
-		$urlreplacement = "<a href='\0' target='blank'>\0</a>";
+		$urlreplacement = '<a href="\0" target="blank">\0</a>';
 
 		$text = str_replace($searchstring, $replacestring, $text);
 		$text = htmlspecialchars($text, null, 'UTF-8');

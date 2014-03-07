@@ -14,10 +14,10 @@ class ShoutboxController extends Gdn_Controller {
 		$Session = GDN::Session();
 
 		//Error handling as per sse standard. no further requests from the client
-		//if(!$Session->CheckPermission('Shoutbox.View')) {
-		//	header("HTTP/1.1 404 Not Found");
-		//	return;
-		//}
+		if(!$Session->CheckPermission('Shoutbox.View')) {
+			header("HTTP/1.1 404 Not Found");
+			return;
+		}
 
 		@set_time_limit(0);
 		header('Content-Type: text/event-stream');
@@ -74,6 +74,7 @@ class ShoutboxController extends Gdn_Controller {
 					$msg["NameColor"] = $this->ShoutModel->GetColor($msg["UserName"]);
 					if ($msg["MessageTo"] != 0)
 						$msg["MessageToName"] = $this->UserModel->GetID($msg["MessageTo"])->Name;
+					$msg["Content"] = $this->ShoutModel->PrepareText($msg["Content"]);
 					printf("data: %s\n\n", json_encode($msg));
 					$LastEventID = $msg["EventID"];
 				}
