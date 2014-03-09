@@ -5,8 +5,8 @@
 $ApplicationInfo['Shoutbox'] = array(
    'Description' => "A simple and elegant shoutbox for vanilla forums",
    'Version' => '0.1',
-	 'SettingsPermission' => array('Shoutbox.View', 'Shoutbox.Post', 'Shoutbox.Delete'),
-	 'RegisterPermissions' => array('Shoutbox.View', 'Shoutbox.Post', 'Shoutbox.Delete'),
+	'SettingsPermission' => array('Shoutbox.View', 'Shoutbox.Post', 'Shoutbox.Delete'),
+	'RegisterPermissions' => array('Shoutbox.View', 'Shoutbox.Post', 'Shoutbox.Delete'),
    'SetupController' => 'setup',
    'Author' => "Lennart Weller",
    'AuthorEmail' => 'lhw@ring0.de',

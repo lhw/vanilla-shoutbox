@@ -16,7 +16,8 @@ $Configuration['Shoutbox']['Client']['Colors'] = array(
 	'#8ae234', '#4e9a06', 					#Chameleon
 	'#3465a4', '#204a87', 					#Sky Blue
 	'#ad7fa8', '#5c3566', 					#Plum
-	'#ef2929', '#cc0000', '#a40000',#Scarlet Red
-	'#2e3436'												#Aluminium
+	'#ef2929', '#cc0000', '#a40000',		#Scarlet Red
+	'#2e3436'									#Aluminium
 );
 $Configuration['Shoutbox']['Client']['MessageLimit'] = 50;
+$Configuration['Shoutbox']['Client']['MessageLength'] = 256;

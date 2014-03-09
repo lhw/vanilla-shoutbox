@@ -50,6 +50,8 @@ if($Construct->TableExists()) {
 //Create basis table for the shoutbox application
 $Construct->PrimaryKey('EventID')
 	->Column('UserID', 'int', FALSE)
+	->Column('EventType', array('CREATE', 'EDIT', 'DELETE'), FALSE)
+	->Column('OriginalID', 'int', TRUE)
 	->Column('MessageTo', 'int', TRUE)
 	->Column('Timestamp', 'int(11)')
 	->Column('Content', 'text')

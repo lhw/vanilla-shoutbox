@@ -52,10 +52,8 @@ class ShoutboxController extends Gdn_Controller {
 		$KEEP_ALIVE_TIME = C('Shoutbox.SSE.KeepAliveTime', 30); //seconds
 
 		//Got a an event id from the browser.
-		$init = true;
 		if(isset($_SERVER["HTTP_LAST_EVENT_ID"]) && $_SERVER["HTTP_LAST_EVENT_ID"] > $LastEventID) {
 			$LastEventID = $_SERVER["HTTP_LAST_EVENT_ID"];
-			$init = false;
 		}
 
 		$start = time();
@@ -67,16 +65,26 @@ class ShoutboxController extends Gdn_Controller {
 				printf(": %s\n\n", sha1(mt_rand()));
 
 			if(!$this->ShoutModel->IsLatest($LastEventID)) {
-				foreach($this->ShoutModel->GetRecentByLastEventID($LastEventID) as $msg) {
+				//get create events
+				foreach($this->ShoutModel->CreateEventsByLastID($LastEventID) as $msg) {
 					printf("id: %d\n", $msg["EventID"]);
-					printf("event: %s\n", $init? "init": "update");
-					$msg["UserName"] = $this->UserModel->GetID($msg["UserID"])->Name;
-					$msg["NameColor"] = $this->ShoutModel->GetColor($msg["UserName"]);
-					if ($msg["MessageTo"] != 0)
-						$msg["MessageToName"] = $this->UserModel->GetID($msg["MessageTo"])->Name;
-					$msg["Content"] = $this->ShoutModel->PrepareText($msg["Content"]);
-					printf("data: %s\n\n", json_encode($msg));
-					$LastEventID = $msg["EventID"];
+					printf("event: create\n");
+					printf("data: %s\n\n", $this->ShoutModel->GetJSONItem($msg));
+					if($LastEventID < $msg["EventID"]) $LastEventID = $msg["EventID"];
+				}
+				//get delete events
+				foreach($this->ShoutModel->DeleteEventsByLastID($LastEventID) as $msg) {
+					printf("id: %d\n", $msg["EventID"]);
+					printf("event: delete\n");
+					printf("data: %s\n\n", $this->ShoutModel->GetJSONItem($msg));
+					if($LastEventID < $msg["EventID"]) $LastEventID = $msg["EventID"];
+				}
+				//get edit events
+				foreach($this->ShoutModel->EditEventsByLastID($LastEventID) as $msg) {
+					printf("id: %d\n", $msg["EventID"]);
+					printf("event: edit\n");
+					printf("data: %s\n\n", $this->ShoutModel->GetJSONItem($msg));
+					if($LastEventID < $msg["EventID"]) $LastEventID = $msg["EventID"];
 				}
 			}
 
