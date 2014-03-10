@@ -9,7 +9,7 @@ class ShoutboxHooks implements Gdn_IPlugin {
     */
    public function Setup() {
 			if(!C('Skeleton.Setup', FALSE)) {
-				include(PATH_APPLICATIONS . DS . 'shoutbox' . DS . 'settings' . DS . 'structure.php');
+				include(PATH_APPLICATIONS.DS.'shoutbox'.DS.'settings'.DS.'structure.php');
 			}
       SaveToConfig('Shoutbox.Setup', TRUE);
    }
@@ -18,7 +18,7 @@ class ShoutboxHooks implements Gdn_IPlugin {
     * Special function automatically run upon clicking 'Disable' on your application.
     */
    public function OnDisable() {
-      // Optional. Delete this if you don't need it.
+      // Optional.Delete this if you don't need it.
    }
    
    /**
@@ -27,4 +27,15 @@ class ShoutboxHooks implements Gdn_IPlugin {
    public function CleanUp() {
       // Optional. Delete this if you don't need it.
    }
+
+	public function Base_Render_Before(&$Sender) {
+      $Session = Gdn::Session();
+
+   }
+
+	public function DiscussionsController_Render_After(&$Sender) {
+		$Session = Gdn::Session();
+		//$Sender->Head->AddJsFile('shoutbox.js');
+		include_once(PATH_APPLICATIONS.DS.'shoutbox'.DS.'views'.DS.'shoutbox.php');
+	}
 }
