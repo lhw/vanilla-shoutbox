@@ -2,32 +2,22 @@
 
 class ShoutModel extends Gdn_Model {
 
-	public function GetRecent($Limit = 50) {
-		$Session = GDN::Session();
-
-		$shouts = $this->SQL
-			->Select('*')
-			->From('Shoutbox')
-			->BeginWhereGroup()
-				->Where('MessageTo', 0)
-				->OrWhere('MessageTo', $Session->UserID)
-			->EndWhereGroup()
-			->OrderBy('EventID', 'desc')
-			->Limit($Limit)
-			->Get()
-			->ResultArray();
-		return array_reverse($shouts);
-	}
-
-	public function CreateEventsByLastID($EventID, $Limit = 50) {
+	public function GetRecentByID($EventID, $Init = false, $Limit = 50) {
 		if(!is_numeric($EventID)) return false;
 		$Session = GDN::Session();
 
-		$shouts = $this->SQL
+
+		$sql = $this->SQL
 			->Select('*')
-			->From('Shoutbox')
+			->From('Shoutbox');
+
+		if($Init)
+			$sql->Where('EventType', 'CREATE');
+		else
+			$sql->Where('OriginalID >=', $EventID);
+
+		$shouts = $sql
 			->Where('EventID >', $EventID)
-			->Where('EventType', 'CREATE')
 			->BeginWhereGroup()
 				->Where('MessageTo', 0)
 				->OrWhere('MessageTo', $Session->UserID)
@@ -40,49 +30,7 @@ class ShoutModel extends Gdn_Model {
 		return array_reverse($shouts);
 	}
 
-	public function DeleteEventsByLastID($EventID) {
-		if(!is_numeric($EventID)) return false;
-		$Session = GDN::Session();
-
-		$shouts = $this->SQL
-			->Select('*')
-			->From('Shoutbox')
-			->Where('EventID >', $EventID)
-			->Where('EventType', 'DELETE')
-			->BeginWhereGroup()
-				->BeginWhereGroup()
-				->Where('MessageTo', 0)
-				->OrWhere('MessageTo', $Session->UserID)
-			->EndWhereGroup()
-			->OrderBy('EventID', 'desc')
-			->Get()
-			->ResultArray();
-
-		return array_reverse($shouts);
-	}
-
-	public function EditEventsByLastID($EventID) {
-		if(!is_numeric($EventID)) return false;
-		$Session = GDN::Session();
-
-		$shouts = $this->SQL
-			->Select('*')
-			->From('Shoutbox')
-			->Where('EventID >', $EventID)
-			->Where('EventType', 'EDIT')
-			->BeginWhereGroup()
-				->BeginWhereGroup()
-				->Where('MessageTo', 0)
-				->OrWhere('MessageTo', $Session->UserID)
-			->EndWhereGroup()
-			->OrderBy('EventID', 'desc')
-			->Get()
-			->ResultArray();
-
-		return array_reverse($shouts);
-	}
-
-	public function GetShout($EventID) {
+	public function GetID($EventID) {
 		if(!is_numeric($EventID)) return false;
 		$Session = GDN::Session();
 
@@ -119,7 +67,7 @@ class ShoutModel extends Gdn_Model {
 		return $lastShout->EventID <= $EventID;
 	}
 
-	public function AddShout($Content, $MessageTo = 0) {
+	public function Add($Content, $MessageTo = 0) {
 		$Session = GDN::Session();
 
 		$this->SQL->Insert('Shoutbox', array(
@@ -137,10 +85,10 @@ class ShoutModel extends Gdn_Model {
 		return true;
 	}
 
-	public function DeleteShout($EventID) {
+	public function Delete($EventID) {
 		if (!is_numeric($EventID)) return false;
 
-		$shout = GetShout($EventID);
+		$shout = GetID($EventID);
 		if(!$shout) return false;
 
 		$this->SQL->Delete('Shoutbox', array('EventID' => $EventID));
@@ -155,10 +103,10 @@ class ShoutModel extends Gdn_Model {
 		return true;
 	}
 
-	public function EditShout($EventID, $Content) {
+	public function Edit($EventID, $Content) {
 		if (!is_numeric($EventID)) return false;
 
-		$shout = GetShout($EventID);
+		$shout = GetID($EventID);
 		if(!$shout) return false;
 
 		$this->SQL->Update('Shoutbox')
@@ -201,7 +149,7 @@ class ShoutModel extends Gdn_Model {
 		return $ColorArray[$sum % count($ColorArray)];
 	}
 
-	public function GetJSONItem($msg) {
+	public function GetJSONMessage($msg) {
 		$UserModel = new UserModel();
 		if($msg['OriginalID'] == 0) {
 			$msg['UserName'] = $UserModel->GetID($msg['UserID'])->Name;

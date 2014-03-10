@@ -57,6 +57,7 @@ class ShoutboxController extends Gdn_Controller {
 		}
 
 		$start = time();
+		$init = true;
 		printf("retry: %s\n", $RECONNECT);
 
 		while(true) {
@@ -65,27 +66,13 @@ class ShoutboxController extends Gdn_Controller {
 				printf(": %s\n\n", sha1(mt_rand()));
 
 			if(!$this->ShoutModel->IsLatest($LastEventID)) {
-				//get create events
-				foreach($this->ShoutModel->CreateEventsByLastID($LastEventID) as $msg) {
+				foreach($this->ShoutModel->GetRecentByID($LastEventID, $init) as $msg) {
 					printf("id: %d\n", $msg["EventID"]);
-					printf("event: create\n");
-					printf("data: %s\n\n", $this->ShoutModel->GetJSONItem($msg));
+					printf("event: %s\n", strtolower($msg["EventType"]));
+					printf("data: %s\n\n", $this->ShoutModel->GetJSONMessage($msg));
 					if($LastEventID < $msg["EventID"]) $LastEventID = $msg["EventID"];
 				}
-				//get delete events
-				foreach($this->ShoutModel->DeleteEventsByLastID($LastEventID) as $msg) {
-					printf("id: %d\n", $msg["EventID"]);
-					printf("event: delete\n");
-					printf("data: %s\n\n", $this->ShoutModel->GetJSONItem($msg));
-					if($LastEventID < $msg["EventID"]) $LastEventID = $msg["EventID"];
-				}
-				//get edit events
-				foreach($this->ShoutModel->EditEventsByLastID($LastEventID) as $msg) {
-					printf("id: %d\n", $msg["EventID"]);
-					printf("event: edit\n");
-					printf("data: %s\n\n", $this->ShoutModel->GetJSONItem($msg));
-					if($LastEventID < $msg["EventID"]) $LastEventID = $msg["EventID"];
-				}
+				$init = false;
 			}
 
 			@ob_flush();
