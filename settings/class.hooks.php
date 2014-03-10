@@ -30,12 +30,19 @@ class ShoutboxHooks implements Gdn_IPlugin {
 
 	public function Base_Render_Before(&$Sender) {
       $Session = Gdn::Session();
+		$Controller = $Sender->ControllerName;
+		$ShowOnController = array(
+			'discussionscontroller',
+//			'categoriescontroller',
+//			'profilecontroller',
+//			'activitycontroller'
+		);
 
+		if($Session->IsValid() && InArrayI($Controller, $ShowOnController))
+		{
+			require_once(PATH_APPLICATIONS.DS.'shoutbox'.DS.'modules'.DS.'class.shoutboxmodule.php');
+			$ShoutboxModule = new ShoutboxModule($Sender);
+			$Sender->AddModule($ShoutboxModule);
+		}
    }
-
-	public function DiscussionsController_Render_After(&$Sender) {
-		$Session = Gdn::Session();
-		//$Sender->Head->AddJsFile('shoutbox.js');
-		include_once(PATH_APPLICATIONS.DS.'shoutbox'.DS.'views'.DS.'shoutbox.php');
-	}
 }

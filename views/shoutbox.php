@@ -11,8 +11,8 @@
 </div>
 
 <script type="text/javascript">
-		$('#shoutbox').prependTo('#Content');
-		$('#shoutbox').insertAfter('.Info');
+		//$('#shoutbox').prependTo('#Content');
+		//$('#shoutbox').insertAfter('.Info');
 		$('#shoutbox-send').click(function() {
 			gdn.informMessage(gdn.url('profile/vanilla')); //TODO remember these two
 		});
